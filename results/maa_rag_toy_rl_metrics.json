@@ -1,20 +1,20 @@
 [
   {
     "epoch": 0,
-    "avg_return": 0.0012493630638346076,
-    "avg_reward": 0.0003773343811294477,
-    "num_steps": 18
+    "avg_return": -0.03453980013728142,
+    "avg_reward": -0.01,
+    "num_steps": 10
   },
   {
     "epoch": 1,
-    "avg_return": 0.04117923602461815,
-    "avg_reward": 0.006317016317016317,
-    "num_steps": 13
+    "avg_return": 0.04351165518164635,
+    "avg_reward": 0.013392061577505247,
+    "num_steps": 11
   },
   {
     "epoch": 2,
-    "avg_return": 0.14687776565551758,
-    "avg_reward": 0.025972850678733027,
-    "num_steps": 17
+    "avg_return": 0.0028389599174261093,
+    "avg_reward": -0.0016083916083916077,
+    "num_steps": 11
   }
 ]
