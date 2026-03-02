@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple
 
-import math
+import json
+from pathlib import Path
 
 try:
     import torch
@@ -103,6 +104,12 @@ def train(num_epochs: int = 5, device: str = "cpu") -> None:
 
     ppo_cfg = PPOConfig()
 
+    # Prepare logging of per-epoch metrics
+    out_dir = Path(__file__).resolve().parent.parent / "results"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "maa_rag_toy_rl_metrics.json"
+    epoch_logs = []
+
     for epoch in range(num_epochs):
         transitions = collect_trajectories(env, planner, ppo_cfg)
         if not transitions:
@@ -155,4 +162,18 @@ def train(num_epochs: int = 5, device: str = "cpu") -> None:
             optim_val.step()
 
         avg_return = float(ret_tensor.mean().item())
+        avg_reward = float(sum(t.reward for t in transitions) / len(transitions))
         print(f"Epoch {epoch}: avg return {avg_return:.3f}, steps {len(transitions)}")
+
+        epoch_logs.append(
+            {
+                "epoch": epoch,
+                "avg_return": avg_return,
+                "avg_reward": avg_reward,
+                "num_steps": len(transitions),
+            }
+        )
+
+    # Save metrics to JSON file for offline inspection
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(epoch_logs, f, indent=2, ensure_ascii=False)

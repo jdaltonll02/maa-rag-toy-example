@@ -1,0 +1,143 @@
+[
+  {
+    "example_index": 0,
+    "question": "What lifestyle change can reduce the risk of heart disease?",
+    "gold_answer": "Eating a healthy diet can reduce the risk of heart disease.",
+    "final_answer": null,
+    "verification_score": 0.0,
+    "steps": [
+      {
+        "step": 1,
+        "macro_action": "RETRIEVE",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 1
+        }
+      },
+      {
+        "step": 2,
+        "macro_action": "VERIFY",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 2
+        }
+      },
+      {
+        "step": 3,
+        "macro_action": "RETRIEVE",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 3
+        }
+      },
+      {
+        "step": 4,
+        "macro_action": "RETRIEVE",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 4
+        }
+      },
+      {
+        "step": 5,
+        "macro_action": "REASON",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 5
+        }
+      },
+      {
+        "step": 6,
+        "macro_action": "VERIFY",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 6
+        }
+      }
+    ],
+    "history": [
+      "Retrieved 3 documents.",
+      "Verifier: missing answer or docs; score = 0.0",
+      "Retrieved 3 documents.",
+      "Retrieved 3 documents.",
+      "Reasoning graph built:\nNode: Healthy Diet -> A healthy diet includes vegetables, fruits, whole grains, and lean proteins. Lim...\nNode: Heart Disease Basics -> Heart disease refers to several types of heart conditions. The most common type ...\nNode: Large Language Models -> Large language models (LLMs) can answer questions using context. They may halluc...",
+      "Verifier: missing answer or docs; score = 0.0"
+    ]
+  },
+  {
+    "example_index": 1,
+    "question": "What structure do graph databases use to represent data?",
+    "gold_answer": "Graph databases represent data as nodes and edges.",
+    "final_answer": null,
+    "verification_score": 0.0,
+    "steps": [
+      {
+        "step": 1,
+        "macro_action": "VERIFY",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 1
+        }
+      },
+      {
+        "step": 2,
+        "macro_action": "REASON",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 2
+        }
+      },
+      {
+        "step": 3,
+        "macro_action": "TERMINATE",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 3
+        }
+      }
+    ],
+    "history": [
+      "Verifier: missing answer or docs; score = 0.0",
+      "Reasoner: no docs, skipping."
+    ]
+  },
+  {
+    "example_index": 2,
+    "question": "What is a potential problem with large language models when context is missing?",
+    "gold_answer": "Large language models may hallucinate when context is missing.",
+    "final_answer": null,
+    "verification_score": 0.0,
+    "steps": [
+      {
+        "step": 1,
+        "macro_action": "VERIFY",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 1
+        }
+      },
+      {
+        "step": 2,
+        "macro_action": "TERMINATE",
+        "low_level_choice": null,
+        "reward": -0.01,
+        "info": {
+          "step": 2
+        }
+      }
+    ],
+    "history": [
+      "Verifier: missing answer or docs; score = 0.0"
+    ]
+  }
+]
