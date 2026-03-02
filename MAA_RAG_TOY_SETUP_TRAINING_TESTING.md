@@ -37,7 +37,18 @@ This document describes how to set up the environment, train the hierarchical pl
    pip install -r requirements.txt
    ```
 
-This installs the minimal requirements for the toy example (`torch` and `transformers`). If `transformers` or model weights are not available, the answer agents fall back to deterministic string behavior.
+This installs the minimal requirements for the toy example:
+
+- `torch` – for the planner networks and PPO.
+- `transformers` – optional, for answer-generation agents using a
+  small causal LM (e.g. `gpt2`).
+- `datasets` – optional but recommended, to load real QA benchmarks
+  (NQ-Open, PopQA, AmbigQA, HotpotQA, 2WikiMultiHopQA, Musique,
+  Bamboogle) used in the extended toy experiments.
+
+If `transformers` or model weights are not available, the answer
+agents fall back to deterministic string behavior. If `datasets` is
+missing, the code simply uses the tiny built-in toy QA set.
 
 ## 2. Training (Toy Hierarchical PPO)
 
@@ -49,11 +60,17 @@ From the repository root (with the virtual environment activated):
 python -m maa_rag_toy.run_toy_rl
 ```
 
-What this does:
+What this does (with the default settings in `run_toy_rl.py`):
 
 - Builds the toy environment (`MAARagToyEnv`) and `HierarchicalPlanner`.
-- Rolls out trajectories over the small synthetic QA dataset.
-- Optimizes high-level and low-level policies and a value network using PPO.
+- Rolls out trajectories over a **mixture** of QA tasks:
+  - The tiny synthetic toy set from `maa_rag_toy/data.py`.
+  - Samples from single-hop benchmarks (NQ-Open, PopQA, AmbigQA).
+  - Samples from multi-hop benchmarks (HotpotQA, Musique, and
+    others where available), controlled via the `mode` and
+    `max_per_dataset` arguments to `train`.
+- Optimizes high-level and low-level policies and a value network
+  using PPO.
 - Prints per-epoch average return and number of steps.
 - Writes per-epoch metrics to `results/maa_rag_toy_rl_metrics.json`.
 
@@ -69,9 +86,12 @@ From the repository root (with the virtual environment activated):
 python -m maa_rag_toy.run_toy_inference
 ```
 
-What this does:
+What this does (with the default settings in `run_toy_inference.py`):
 
-- Iterates over the toy QA examples from `maa_rag_toy/data.py`.
+- Iterates over the toy QA examples from `maa_rag_toy/data.py` **plus**
+  sampled questions from single-hop and multi-hop benchmarks, since
+  the script calls `iter_questions_and_answers(use_external=True,
+  mode="mixed", max_per_dataset=...)`.
 - For each question, repeatedly:
   - Encodes the environment state.
   - Samples a macro-action and, when appropriate, an answer mode.

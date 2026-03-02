@@ -38,8 +38,16 @@ description: high-level chooses a macro-option, low-level (for
 
 - [agentic_rag_improved/maa_rag_toy/data.py](agentic_rag_improved/maa_rag_toy/data.py)
   - `QAExample`: small dataclass for `(question, answer)`.
-  - `get_dataset()` and `iter_questions_and_answers()` provide a tiny
-    synthetic QA set with mixed question types.
+  - `get_dataset(...)` and `iter_questions_and_answers(...)`:
+    - Always include a tiny synthetic toy QA set.
+    - Optionally augment with **baseline QA benchmarks** via the
+      Hugging Face `datasets` library:
+      - **Single-hop**: NQ-Open, PopQA, AmbigQA.
+      - **Multi-hop**: HotpotQA, 2WikiMultiHopQA, Musique, Bamboogle.
+    - A `mode` flag selects between `"single-hop"`,
+      `"multi-hop"`, or `"mixed"` (both), and
+      `max_per_dataset` controls how many examples are sampled
+      from each external dataset (default used in the scripts is 50).
   - `f1_score` and `exact_match` implement token-level F1 and EM,
     used for reward shaping.
   - `make_claims(answer)` decomposes an answer into coarse clauses
@@ -126,8 +134,10 @@ description: high-level chooses a macro-option, low-level (for
 - [agentic_rag_improved/maa_rag_toy/rl_hppo.py](agentic_rag_improved/maa_rag_toy/rl_hppo.py)
   - `PPOConfig`: hyperparameters (\(\gamma, \lambda, \epsilon,\) learning
     rate, etc.).
-  - `collect_trajectories(env, planner, cfg)`:
-    - Loops over the toy QA dataset.
+  - `collect_trajectories(env, planner, cfg, use_external, max_per_dataset, mode)`:
+    - Loops over either the tiny toy QA set alone, or the toy set
+      **plus** samples from the above single-hop / multi-hop QA
+      benchmarks, depending on the flags.
     - For each example, repeatedly:
       - Encodes state via `env.encode_state()`.
       - Samples macro and low-level actions from `HierarchicalPlanner`.
@@ -136,10 +146,10 @@ description: high-level chooses a macro-option, low-level (for
   - `compute_gae(...)`: computes advantages and returns with
     Generalized Advantage Estimation (GAE), following the PPO
     formulation.
-  - `train(num_epochs=5, device="cpu")`:
+  - `train(num_epochs=5, device="cpu", use_external=False, max_per_dataset=200, mode="single-hop")`:
     - Initializes `MAARagToyEnv` and `HierarchicalPlanner`.
     - For each epoch:
-      - Collects transitions.
+      - Collects transitions from the chosen QA mixture.
       - Optimizes high-level policy, low-level policy (only on
         `ANSWER` steps), and value network using PPO’s clipped objective.
       - Prints average return per epoch.
@@ -155,9 +165,11 @@ From the repository root (where `pyproject.toml` lives), run:
 python -m agentic_rag_improved.maa_rag_toy.run_toy_inference
 ```
 
-This will:
+By default, the script is configured to **use_external=True** and
+`mode="mixed"`, so it will:
 
-- Iterate over a few synthetic QA examples.
+- Iterate over the toy QA examples **plus** sampled questions from
+  the single-hop and multi-hop benchmarks listed above.
 - For each question, sample macro-actions and answer modes from the
   hierarchical planner.
 - Print the chosen actions, final answer, verification score, and
@@ -165,7 +177,8 @@ This will:
 
 ## 5. Running the Toy Hierarchical PPO Demo
 
-To run a very small PPO training loop (CPU-only, toy scale):
+To run PPO training (CPU-only, toy scale, but now over a richer
+mixture of QA tasks):
 
 ```bash
 python -m agentic_rag_improved.maa_rag_toy.run_toy_rl
@@ -174,16 +187,23 @@ python -m agentic_rag_improved.maa_rag_toy.run_toy_rl
 This will:
 
 - Construct `MAARagToyEnv` and `HierarchicalPlanner`.
-- Collect trajectories across the toy QA dataset.
+- Collect trajectories across the configured QA mixture (toy +
+  selected external datasets, depending on `use_external` and
+  `mode` inside `run_toy_rl.py`).
 - Optimize separate high-level and low-level policies and a value
   function using PPO-style clipped objectives.
-- Print average return per epoch.
+- Print average return per epoch and log metrics to
+  `results/maa_rag_toy_rl_metrics.json`.
 
 > Note: This example requires PyTorch. The answer-generating
 > agents optionally use `transformers` and a small local HF model
 > (default `gpt2`). If `transformers` or the model are not
 > available, they fall back to deterministic string-based behavior,
 > which is sufficient for structural testing.
+>
+> When using the real QA benchmarks, the toy code also relies on
+> the Hugging Face `datasets` library to load NQ-Open, PopQA,
+> AmbigQA, HotpotQA, 2WikiMultiHopQA, Musique, and Bamboogle.
 
 ## 6. Relation to MAO-ARAG Code
 
