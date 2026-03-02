@@ -19,7 +19,11 @@ def main() -> None:
 
     all_results = []
 
-    for idx, (q, gold) in enumerate(iter_questions_and_answers()):
+    # Set use_external=True and choose mode to control which baseline
+    # datasets are used: "single-hop", "multi-hop", or "mixed".
+    for idx, (q, gold) in enumerate(
+        iter_questions_and_answers(use_external=True, max_per_dataset=50, mode="mixed")
+    ):
         print("=" * 60)
         print(f"Example {idx+1}: {q}")
         state = env.reset(q, gold)

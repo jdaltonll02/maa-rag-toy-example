@@ -29,6 +29,43 @@ class PPOConfig:
     train_iters: int = 10
     steps_per_epoch: int = 64
 
+    @staticmethod
+    def default() -> "PPOConfig":
+        """Baseline configuration used in the paper-style toy setup."""
+
+        return PPOConfig()
+
+    @staticmethod
+    def conservative() -> "PPOConfig":
+        """Smaller updates, useful for stability checks."""
+
+        return PPOConfig(
+            clip_ratio=0.1,
+            lr=1e-4,
+            train_iters=5,
+            steps_per_epoch=48,
+        )
+
+    @staticmethod
+    def aggressive() -> "PPOConfig":
+        """Larger, faster updates for quick experimentation."""
+
+        return PPOConfig(
+            clip_ratio=0.3,
+            lr=5e-4,
+            train_iters=15,
+            steps_per_epoch=96,
+        )
+
+    @staticmethod
+    def small_batch() -> "PPOConfig":
+        """Tiny batch size to test variance / debugging runs."""
+
+        return PPOConfig(
+            steps_per_epoch=16,
+            train_iters=8,
+        )
+
 
 @dataclass
 class Transition:
@@ -42,10 +79,21 @@ class Transition:
     value: float
 
 
-def collect_trajectories(env: MAARagToyEnv, planner: HierarchicalPlanner, cfg: PPOConfig) -> List[Transition]:
+def collect_trajectories(
+    env: MAARagToyEnv,
+    planner: HierarchicalPlanner,
+    cfg: PPOConfig,
+    use_external: bool = False,
+    max_per_dataset: int = 200,
+    mode: str = "single-hop",
+) -> List[Transition]:
     """Roll out trajectories across all QA examples once per epoch."""
 
-    dataset = get_dataset()
+    dataset = get_dataset(
+        use_external=use_external,
+        max_per_dataset=max_per_dataset,
+        mode=mode,
+    )
     transitions: List[Transition] = []
     for qa in dataset:
         state = env.reset(qa.question, qa.answer)
@@ -92,7 +140,13 @@ def compute_gae(transitions: List[Transition], gamma: float, lam: float) -> Tupl
     return adv_tensor, ret_tensor
 
 
-def train(num_epochs: int = 5, device: str = "cpu") -> None:
+def train(
+    num_epochs: int = 5,
+    device: str = "cpu",
+    use_external: bool = False,
+    max_per_dataset: int = 200,
+    mode: str = "single-hop",
+) -> None:
     if torch is None or F is None or Adam is None:
         raise RuntimeError("PyTorch is required to run PPO training.")
 
@@ -102,7 +156,13 @@ def train(num_epochs: int = 5, device: str = "cpu") -> None:
     optim_low = Adam(planner.parameters_low(), lr=PPOConfig.lr)
     optim_val = Adam(planner.parameters_value(), lr=PPOConfig.lr)
 
-    ppo_cfg = PPOConfig()
+    # Choose a PPO configuration here. The default mirrors the
+    # original toy settings; others explore different trade-offs.
+    # ppo_cfg = PPOConfig.default()
+    # ppo_cfg = PPOConfig.conservative()
+    # ppo_cfg = PPOConfig.aggressive()
+    # ppo_cfg = PPOConfig.small_batch()
+    ppo_cfg = PPOConfig.default()
 
     # Prepare logging of per-epoch metrics
     out_dir = Path(__file__).resolve().parent.parent / "results"
@@ -111,7 +171,14 @@ def train(num_epochs: int = 5, device: str = "cpu") -> None:
     epoch_logs = []
 
     for epoch in range(num_epochs):
-        transitions = collect_trajectories(env, planner, ppo_cfg)
+        transitions = collect_trajectories(
+            env,
+            planner,
+            ppo_cfg,
+            use_external=use_external,
+            max_per_dataset=max_per_dataset,
+            mode=mode,
+        )
         if not transitions:
             print("No transitions collected; skipping epoch.")
             continue
